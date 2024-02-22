@@ -1,0 +1,126 @@
+#include <iostream>
+#include <map>
+#include <vector>
+#include <string>
+
+bool solve(std::map<char, int>& values, const std::vector<std::string>& words, int target) {
+    std::map<char, int> temp_values = values;
+
+    for (const auto& word : words) {
+        int word_sum = 0;
+
+        for (const auto& c : word) {
+            if (temp_values.find(c) == temp_values.end()) {
+                return false;
+            }
+            word_sum += temp_values[c];
+        }
+
+        if (word_sum == target) {
+            continue;
+        }
+
+        for (const auto& c : word) {
+            temp_values[c] += (target - word_sum) / word.size();
+        }
+    }
+
+    for (const auto& [c, v] : temp_values) {
+        if (v != values[c]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void print_question(const std::vector<std::string>& words, const std::map<char, int>& values) {
+    std::cout << "Question: Which values should the following letters have to satisfy the equation 'SEND + MORE = MONEY' with a sum of 1000?\n";
+    std::cout << "Hints:\n";
+
+    for (const auto& [c, v] : values) {
+        std::cout << "- " << c << " stands for " << (c == 'S' ? "S" : c == 'E' ? "E" : c == 'N' ? "N" : c == 'D' ? "D" : c == 'M' ? "M" : c == 'O' ? "O" : c == 'R' ? "R" : "Y") << " in the word.\n";
+    }
+
+    std::cout << "Your answers:\n";
+}
+
+int main() {
+    std::vector<std::string> words = {"SEND", "MORE", "MONEY"};
+    std::map<char, int> values = {{'S', 0}, {'E', 0}, {'N', 0}, {'D', 0}, {'M', 0}, {'O', 0}, {'R', 0}, {'Y', 0}};
+    int target = 1000;
+
+    print_question(words, values);
+
+    std::map<char, int> user_values;
+    for (const auto& [c, v] : values) {
+        std::cout << c << ": ";
+        std::cin >> user_values[c];
+    }
+
+    if (solve(user_values, words, target)) {
+        std::cout << "Congratulations! Your answers are correct.\n";
+    } else {
+        std::cout << "Sorry, your answers are incorrect. Please try again.\n";
+    }
+
+    return 0;
+}
+
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+struct TempleStairs {
+    int target;
+    int steps;
+    int level;
+    std::vector<std::string> hints;
+
+    TempleStairs(int t, int s, int l, std::vector<std::string> h) : target(t), steps(s), level(l), hints(h) {}
+
+    void printHints() {
+        for (const auto& hint : hints) {
+            std::cout << hint << std::endl;
+        }
+    }
+
+    bool climb(int user_steps) {
+        if (user_steps != 1 && user_steps != 2) {
+            std::cout << "Invalid input. You can only climb 1 or 2 steps at a time." << std::endl;
+            return false;
+        }
+
+        steps -= user_steps;
+        level += user_steps;
+
+        if (steps == 0) {
+            std::cout << "Congratulations! You have reached the top of the temple stairs." << std::endl;
+            return true;
+        }
+
+        return false;
+    }
+};
+
+int main() {
+    TempleStairs templeStairs(10, 10, 0, {
+        "Hint 1: You can only climb 1 or 2 steps at a time.",
+        "Hint 2: Be careful not to run out of steps before reaching the top.",
+        "Hint 3: Stay focused and determined to reach the top."
+    });
+
+    int user_steps;
+    while (true) {
+        templeStairs.printHints();
+        std::cout << "Enter the number of steps you want to climb (1 or 2): ";
+        std::cin >> user_steps;
+
+        if (templeStairs.climb(user_steps)) {
+            break;
+        }
+    }
+
+    return 0;
+}
