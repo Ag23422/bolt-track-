@@ -1,0 +1,59 @@
+code for moving without collision
+#include "Components/PrimitiveComponent.h"
+#include "GameFramework/Actor.h"
+#include "Components/SphereComponent.h"
+#include "UnrealMathUtility.h"
+
+void MoveActorWithoutCollision(AActor* Actor, const FVector& Destination, float Speed)
+{
+    // Get the actor's collision component
+    UPrimitiveComponent* CollisionComponent = Actor->FindComponentByClass<UPrimitiveComponent>();
+    if (!CollisionComponent)
+    {
+        return;
+    }
+
+    // Calculate the direction and distance to the destination
+    FVector Direction = Destination - Actor->GetActorLocation();
+    float Distance = Direction.Size();
+
+    // Move the actor along the direction vector
+    while (Distance > 0)
+    {
+        // Calculate the distance to move this frame
+        float FrameDistance = Speed * GetWorld()->GetDeltaSeconds();
+        if (FrameDistance > Distance)
+        {
+            FrameDistance = Distance;
+        }
+
+        // Calculate the starting and ending points of the sweep
+        FVector Start = Actor->GetActorLocation();
+        FVector End = Start + Direction.GetSafeNormal() * FrameDistance;
+
+        // Perform the sweep and check for collisions
+        FHitResult Hit;
+        if (CollisionComponent->SweepSingleByChannel(Hit, Start, End, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeSphere(CollisionComponent->GetScaledSphereRadius())))
+        {
+            // If a collision is detected, adjust the actor's position
+            FVector CollisionOffset = Hit.ImpactPoint - Start;
+            Actor->SetActorLocation(Actor->GetActorLocation() + CollisionOffset);
+            Distance -= CollisionOffset.Size();
+        }
+        else
+        {
+            // If no collision is detected, move the actor
+            Actor->SetActorLocation(Actor->GetActorLocation() + Direction.GetSafeNormal() * FrameDistance);
+            Distance -= FrameDistance;
+        }
+    }
+}
+
+void AWall::OnBeginOverlap(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
+    {
+        // Move the other actor without colliding with walls
+        MoveActorWithoutCollision(OtherActor, OtherActor->GetActorLocation() + FVector(100, 0, 0), 100);
+    }
+}
